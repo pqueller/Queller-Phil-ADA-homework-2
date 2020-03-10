@@ -1,0 +1,42 @@
+---
+title: "Queller-Phil-ADA-homework-2"
+author: "Phil Queller"
+date: "3/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Homework 2
+
+```{r}
+
+library(tidyverse)
+library(dplyr)
+
+
+```
+
+# Challenge 1
+
+```{r}
+
+m <- read_csv("~/movies.csv")
+head(m)
+```
+
+
+Use a one-line statement to filter the dataset to include just movies from 1920 to 1979 and movies that are less than 4 hours long (runtimeMinutes < 240), and add a new column that codes the startYear into a new variable, decade (“20s”, “30s”, …“70s”). If you do this correctly, there should be 5741 movies remaining in the dataset.
+Use {ggplot2} to plot histograms of the distribution of runtimeMinutes for each decade.
+
+HINT: Try using facet_wrap() to do this!
+
+```{r}
+
+decade <- m %>% filter(startYear >= "1920" & startYear <= "1979")
+View(decade)
+
+
+```
