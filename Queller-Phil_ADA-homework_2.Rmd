@@ -13,9 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 
+library(ggplot2)
 library(tidyverse)
 library(dplyr)
-
+library(mosaic)
+library(curl)
 
 ```
 
@@ -25,6 +27,8 @@ library(dplyr)
 
 m <- read_csv("~/movies.csv")
 head(m)
+
+
 ```
 
 
@@ -35,8 +39,81 @@ HINT: Try using facet_wrap() to do this!
 
 ```{r}
 
-decade <- m %>% filter(startYear >= "1920" & startYear <= "1979")
-View(decade)
+m2 <- m %>% filter(runtimeMinutes < 240 & startYear >= 1920 & startYear <= 1979) %>%
+  mutate(decade=case_when(startYear %in% 1920:1929 ~ "20s", startYear %in% 1930:1939 ~ "30s", startYear %in% 1940:1949 ~ "40s", startYear %in% 1950:1939 ~ "50s", startYear %in% 1960:1939 ~ "60s", startYear %in% 1970:1939 ~ "70s"))
+  
+m2 %>% ggplot(aes(x=runtimeMinutes)) +
+  geom_histogram() +
+  facet_wrap(~ decade)
+
+view(m2)
+```
+Use a one-line statement to calculate the population mean and population standard deviation in runtimeMinutes for each decade and save the results in a new dataframe, results.
+
+HINT: Use {dplyr} functions and the pipe operator!
+
+```{r}
+
+results <- m2 %>% group_by(decade) %>% summarise(mean = mean(runtimeMinutes), standard_deviation = sd(runtimeMinutes))
+
+```
+
+Draw a single sample of 100 movies from each decade, calculate this single sample mean and sample standard deviation in runtimeMinutes, and estimate the SE around the population mean runtimeMinutes for each decade based on the standard deviation and sample size from these samples.
+
+```{r}
+
+n <- 100
+s <- sample_n(m2, size = n, replce = FALSE)
+sample_summary <- s %>% group_by(decade) %>% summarise(mean = mean(runtimeMinutes), standard_deviation = sd(runtimeMinutes))
 
 
+```
+
+
+Compare these estimates to the actual population mean runtimeMinutes and to the calculated SE in the population mean for samples of size 100 based on the population standard deviation for each decade.
+```{r}
+
+
+
+
+```
+
+Generate a sampling distribution of mean runtimeMinutes for each decade by [a] drawing 10,000 samples of 100 movies from each decade and, for each sample, [b] calculating the mean runtimeMinutes and the standard deviation in runtimeMinutes. Recall that the standard deviation of the sampling distribution is another estimate of the standard error in the opulation mean for a particular sample size.
+```{r}
+
+reps <- 10000
+sample_distribution_mean <-  do(reps) * mean(~runtimeMinutes, data = sample_n(m2, size = n, replace = FALSE)) 
+
+sample_distribution_sd <- do(reps) * sd(~runtimeMinutes, data = sample_n(m2, size = n, replace = FALSE))
+
+View(sample_distribution_mean)
+
+```
+
+
+# Challenge 2
+
+Every Saturday, at the same time, a primatologist goes and sits in the forest in the morning and listens for titi monkey calls, counting the number of calls they hear in a 3 hour window from 5am to 8am. Based on previous knowledge, she believes that the mean number calls she will hear in that time is 18. Let X represent the appropriate Poisson random variable of the number of calls heard in each monitoring session.
+
+```{r}
+
+
+
+```
+
+# Challenge 3
+
+Load in the dataset “zombies.csv” from the ADA-datasets repository on GitHub as a “tibble”, d. The URL for the data file is “https://raw.githubusercontent.com/difiore/ADA-datasets/master/zombies.csv”. This data includes the first and last name and gender of the entire population of 1000 people who have survived the zombie apocalypse and are now ekeing out an existence somewhere on the East Coast, along with several other variables (height, weight, age, number of years of education, number of zombies they have killed, and college major). See here for info on important post-zombie apocalypse majors!
+
+```{r}
+
+f <- "https://raw.githubusercontent.com/difiore/ADA-datasets/master/zombies.csv"
+d <- read_csv(f, col_names = TRUE)
+head(d)
+
+
+
+```
+
+```
 ```
