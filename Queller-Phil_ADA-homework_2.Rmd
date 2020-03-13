@@ -39,14 +39,14 @@ HINT: Try using facet_wrap() to do this!
 
 ```{r}
 
-m2 <- m %>% filter(runtimeMinutes < 240 & startYear >= 1920 & startYear <= 1979) %>%
-  mutate(decade=case_when(startYear %in% 1920:1929 ~ "20s", startYear %in% 1930:1939 ~ "30s", startYear %in% 1940:1949 ~ "40s", startYear %in% 1950:1939 ~ "50s", startYear %in% 1960:1939 ~ "60s", startYear %in% 1970:1939 ~ "70s"))
+m2 <- m %>% filter(runtimeMinutes < 240 & startYear %in% 1920:1979) %>%
+  mutate(decade=case_when(startYear %in% 1920:1929 ~ "20s", startYear %in% 1930:1939 ~ "30s", startYear %in% 1940:1949 ~ "40s", startYear %in% 1950:1959 ~ "50s", startYear %in% 1960:1969 ~ "60s", startYear %in% 1970:1979 ~ "70s"))
   
 m2 %>% ggplot(aes(x=runtimeMinutes)) +
   geom_histogram() +
   facet_wrap(~ decade)
 
-view(m2)
+head(m2)
 ```
 Use a one-line statement to calculate the population mean and population standard deviation in runtimeMinutes for each decade and save the results in a new dataframe, results.
 
@@ -54,18 +54,21 @@ HINT: Use {dplyr} functions and the pipe operator!
 
 ```{r}
 
-results <- m2 %>% group_by(decade) %>% summarise(mean = mean(runtimeMinutes), standard_deviation = sd(runtimeMinutes))
-
+results <- m2 %>% group_by(decade) %>% summarise(pop_mean = mean(runtimeMinutes), pop_standard_deviation = sd(runtimeMinutes))
+head(results)
 ```
 
 Draw a single sample of 100 movies from each decade, calculate this single sample mean and sample standard deviation in runtimeMinutes, and estimate the SE around the population mean runtimeMinutes for each decade based on the standard deviation and sample size from these samples.
 
 ```{r}
 
+set.seed(100)
 n <- 100
-s <- sample_n(m2, size = n, replce = FALSE)
-sample_summary <- s %>% group_by(decade) %>% summarise(mean = mean(runtimeMinutes), standard_deviation = sd(runtimeMinutes))
-
+s <- sample_n(m2, size = n, replace = FALSE)
+sample_summary <- s %>% group_by(decade) %>% summarise(sample_mean = mean(runtimeMinutes), sample_standard_deviation = sd(runtimeMinutes))
+head(sample_summary)
+se_mean_runtimeminutes <- sample_summary %>% mutate(sample_standard_error = (sample_standard_deviation/sqrt(n)))
+head(se_mean_runtimeminutes)
 
 ```
 
@@ -74,19 +77,34 @@ Compare these estimates to the actual population mean runtimeMinutes and to the 
 ```{r}
 
 
+pop_vs_sample <- inner_join(results, se_mean_runtimeminutes, by = "decade")
+head(pop_vs_sample)
+
 
 
 ```
+std dev of mean / sqrt of sample = stdev of sample distribution
 
-Generate a sampling distribution of mean runtimeMinutes for each decade by [a] drawing 10,000 samples of 100 movies from each decade and, for each sample, [b] calculating the mean runtimeMinutes and the standard deviation in runtimeMinutes. Recall that the standard deviation of the sampling distribution is another estimate of the standard error in the opulation mean for a particular sample size.
+sample_se <- sample_sd / sqrt(n)
+pop_se <-0 simga/ (sqrt/n) # a signle calue estimated from the populationn sd
+samplingn_dist_se <- sd(m) # a single value caluclated from our sampling distr. 
+
+
+ppois(13, lambda = 18)
+
+
+
+
+Generate a sampling distribution of mean runtimeMinutes for each decade by [a] drawing 10,000 samples of 100 movies from each decade and, for each sample, [b] calculating the mean runtimeMinutes and the standard deviation in runtimeMinutes. Recall that the standard deviation of the sampling distribution is another estimate of the standard error in the population mean for a particular sample size.
 ```{r}
-
+n <- 100
+set.seed(100)
 reps <- 10000
 sample_distribution_mean <-  do(reps) * mean(~runtimeMinutes, data = sample_n(m2, size = n, replace = FALSE)) 
 
 sample_distribution_sd <- do(reps) * sd(~runtimeMinutes, data = sample_n(m2, size = n, replace = FALSE))
 
-View(sample_distribution_mean)
+head(sample_distribution_sd)
 
 ```
 
@@ -95,13 +113,48 @@ View(sample_distribution_mean)
 
 Every Saturday, at the same time, a primatologist goes and sits in the forest in the morning and listens for titi monkey calls, counting the number of calls they hear in a 3 hour window from 5am to 8am. Based on previous knowledge, she believes that the mean number calls she will hear in that time is 18. Let X represent the appropriate Poisson random variable of the number of calls heard in each monitoring session.
 
-```{r}
+What is the probability that she will hear 13 or fewer calls during any given session?
 
+```{r}
 
 ppois(13, lambda = 18)
 
-```
 
+```
+What is the probability that she will hear no calls in a session?
+
+```{r}
+
+dpois(0, lambda = 18)
+
+
+```
+What is the probability that she will hear exactly 7 calls in a session?
+
+```{r}
+
+
+dpois(7, lambda = 18)
+
+```
+What is the probability that she will hear more than 20 calls in a session?
+
+```{r}
+
+ppois(20, lambda = 18, lower.tail = FALSE)
+
+
+```
+Plot the relevant Poisson mass function over the values in range 0 ≤ x ≤ 40.
+
+```{r}
+
+test <- (dpois(0:40, lambda = 18))
+
+ggplot(data = as.data.frame(test), aes(x=test)) + geom_histogram()
+
+
+```
 # Challenge 3
 
 Load in the dataset “zombies.csv” from the ADA-datasets repository on GitHub as a “tibble”, d. The URL for the data file is “https://raw.githubusercontent.com/difiore/ADA-datasets/master/zombies.csv”. This data includes the first and last name and gender of the entire population of 1000 people who have survived the zombie apocalypse and are now ekeing out an existence somewhere on the East Coast, along with several other variables (height, weight, age, number of years of education, number of zombies they have killed, and college major). See here for info on important post-zombie apocalypse majors!
@@ -117,9 +170,46 @@ Calculate the population mean and standard deviation for each quantitative rando
 
 ```{r}
 
-pop_var <- function(x) {
-  sum((m2 - mean(m2))^2) / (length(x))
-}
+pop_means <- d %>% summarise(pop_mean_height = mean(height), pop_mean_weight = mean(weight), pop_mean_zkills = mean(zombies_killed), pop_mean_age = mean(age), pop_mean_yearsEDU = mean(years_of_education))
+head(pop_means)
 
-pop_mea
+pop_stdvs <- d %>% summarise(pop_stdv_height = sqrt(sum((height - mean(height))^2 / length(height))), pop_stdv_weight = sqrt(sum((weight - mean(weight))^2 / length(weight))), pop_stdv_zkills = sqrt(sum((zombies_killed - mean(zombies_killed))^2 / length(zombies_killed))), pop_stdv_age = sqrt(sum((age - mean(age))^2 / length(age))), pop_stdv_yearsEDU = sqrt(sum((years_of_education - mean(years_of_education))^2 / length(years_of_education))))
+pop_stdvs
+
+```                                
+Use {ggplot2} and make scatterplots of height and weight in relation to age. Do these variables seem to be related? In what way?
+
+```{r}
+
+height <- plot(x = d$age, y = d$height)
+weight <- plot(x = d$age, y = d$weight)
+
 ```
+They seem to be positvely correlated.
+
+Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not?
+
+```{r}
+
+histogram(~height, data = d)
+histogram(~weight, data = d)
+histogram(~age, data = d)
+histogram(~years_of_education, data = d)
+histogram(~zombies_killed, data = d)
+
+d$height %>% qqnorm(main = "QQ Plot - height")
+d$weight %>% qqnorm(main = "QQ Plot - weight")
+d$age %>% qqnorm(main = "QQ Plot - age")
+d$zombies_killed %>% qqnorm(main = "QQ Plot - zombies killed")
+d$years_of_education %>% qqnorm(main = "QQ Plot - years of education")
+
+
+```
+Years of education looks slightly bimodal and zombies killed isn't as normal as the remaining variables by the histograms. The QQ plots better shows that zombies killed and years of education are not normally distributed variables. 
+
+
+Now use the sample_n() function from {dplyr} to sample ONE subset of 30 zombie apocalypse survivors (without replacement) from this population and calculate the mean and sample standard deviation for each variable. Also estimate the standard error for each variable and construct the 95% confidence interval for each mean. You can use either the standard normal or a Student’s t distribution to derive the critical values needed to calculate the lower and upper limits of the CI.
+
+```{r}
+
+
