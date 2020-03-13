@@ -164,7 +164,6 @@ Load in the dataset “zombies.csv” from the ADA-datasets repository on GitHub
 f <- "https://raw.githubusercontent.com/difiore/ADA-datasets/master/zombies.csv"
 d <- read_csv(f, col_names = TRUE)
 head(d)
-
 ```
 Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education).
 
@@ -212,4 +211,33 @@ Now use the sample_n() function from {dplyr} to sample ONE subset of 30 zombie a
 
 ```{r}
 
+thirty_survivors <- d %>% select(age, weight, height, zombies_killed, years_of_education)
+z <- 30
+sub_30 <- sample_n(thirty_survivors, size = z, replace = FALSE)
+zage <- sub_30$age
+zweight <- sub_30$weight
+zheight <- sub_30$height
+zyearsEDU <- sub_30$years_of_education
+zzkills <- sub_30$zombies_killed
 
+mean(zage)
+mean(zweight)
+mean(zheight)
+mean(zyearsEDU)
+mean(zzkills)
+
+sd_zage <- sd(zage)
+sd_zweight <- sd(zweight)
+sd_zheight <- sd(zheight)
+sd_zyearsEDU <- sd(zyearsEDU)
+sd_zzkills <- sd(zzkills)
+
+se_age <- sd_zage/sqrt(30)
+se_height <- sd_zheight/sqrt(30)
+se_weight <- sd_zweight/sqrt(30)
+se_yearsEDU <- sd_zyearsEDU/sqrt(30)
+se_zkills <- sd_zzkills/sqrt(30)
+
+
+
+```
