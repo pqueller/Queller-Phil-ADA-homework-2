@@ -98,6 +98,7 @@ Every Saturday, at the same time, a primatologist goes and sits in the forest in
 ```{r}
 
 
+ppois(13, lambda = 18)
 
 ```
 
@@ -111,9 +112,14 @@ f <- "https://raw.githubusercontent.com/difiore/ADA-datasets/master/zombies.csv"
 d <- read_csv(f, col_names = TRUE)
 head(d)
 
-
-
 ```
+Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education).
 
-```
+```{r}
+
+pop_var <- function(x) {
+  sum((m2 - mean(m2))^2) / (length(x))
+}
+
+pop_mea
 ```
